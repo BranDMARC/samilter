@@ -43,7 +43,7 @@ from dkimpy_milter.util import read_keyfile
 from dkimpy_milter.util import own_socketfile
 from dkimpy_milter.util import fold
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 FWS = re.compile(r'\r?\n[ \t]+')
 
 
@@ -61,6 +61,7 @@ class dkimMilter(Milter.Base):
         self.privatersa = privateRSA
         self.privateed25519 = privateEd25519
         self.fp = None
+        self.dkimresult = 'none'
 
     @Milter.noreply
     def connect(self, hostname, unused, hostaddr):

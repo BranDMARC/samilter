@@ -4,5 +4,6 @@ This package requires thease packages.
 - dkimpy-milter
 - pymilter
 - pyspf
+- pydns
 
 
