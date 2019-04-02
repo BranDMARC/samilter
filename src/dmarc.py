@@ -54,6 +54,8 @@ class PublicSuffixList():
     def get_org_domain(self, domain):
         if self.publicsuffix == None:
             return None
+        if domain == None:
+            return None
         labels= domain.split('.')
         length = len(labels)
         for index in range(length):
