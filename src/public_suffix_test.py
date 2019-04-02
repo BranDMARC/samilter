@@ -2,6 +2,8 @@ import sys
 import os
 import dmarc
 
+# https://raw.githubusercontent.com/publicsuffix/list/master/tests/test_psl.txt
+#
 # put Public Suffix List
 # pytest / pytest -v
 
