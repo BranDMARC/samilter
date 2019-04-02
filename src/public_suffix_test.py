@@ -1,3 +1,4 @@
+# coding: utf-8
 import sys
 import os
 import dmarc
@@ -164,6 +165,26 @@ def test_us_k12_08():
   checkPublicSuffix('test.k12.ak.us', 'test.k12.ak.us');
 def test_us_k12_09():
   checkPublicSuffix('www.test.k12.ak.us', 'test.k12.ak.us');
+
+## IDN labels.
+#def test_idn_01():
+#  checkPublicSuffix('食狮.com.cn', '食狮.com.cn');
+#def test_idn_02():
+#  checkPublicSuffix('食狮.公司.cn', '食狮.公司.cn');
+#def test_idn_03():
+#  checkPublicSuffix('www.食狮.公司.cn', '食狮.公司.cn');
+#def test_idn_04():
+#  checkPublicSuffix('shishi.公司.cn', 'shishi.公司.cn');
+#def test_idn_05():
+#  checkPublicSuffix('公司.cn', null);
+#def test_idn_06():
+#  checkPublicSuffix('食狮.中国', '食狮.中国');
+#def test_idn_07():
+#  checkPublicSuffix('www.食狮.中国', '食狮.中国');
+#def test_idn_08():
+#  checkPublicSuffix('shishi.中国', 'shishi.中国');
+#def test_idn_09():
+#  checkPublicSuffix('中国', null);
 
 ## Same as above, but punycoded.
 def test_puny_01():
