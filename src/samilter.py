@@ -43,7 +43,7 @@ from dkimpy_milter.util import read_keyfile
 from dkimpy_milter.util import own_socketfile
 from dkimpy_milter.util import fold
 
-__version__ = "1.0.3"
+__version__ = "1.0.4b"
 FWS = re.compile(r'\r?\n[ \t]+')
 
 
@@ -61,6 +61,7 @@ class dkimMilter(Milter.Base):
         self.privatersa = privateRSA
         self.privateed25519 = privateEd25519
         self.fp = None
+        self.dkimdomain = None
         self.dkimresult = 'none'
 
     @Milter.noreply
@@ -104,6 +105,9 @@ class dkimMilter(Milter.Base):
             connecttype = 'INTERNAL'
         else:
             connecttype = 'EXTERNAL'
+        #if milterconfig.get('Syslog') and milterconfig.get('debugLevel') >= 1:
+        #    syslog.syslog("connect from {0} at {1} {2}"
+        #                  .format(hostname, hostaddr, connecttype))
         if milterconfig.get('Syslog') and milterconfig.get('debugLevel') >= 1:
             syslog.syslog("connect from {0} at {1} {2}"
                           .format(hostname, hostaddr, connecttype))
@@ -175,19 +179,23 @@ class dkimMilter(Milter.Base):
         if not self.fp:
             return Milter.ACCEPT  # no message collected - so no eom processing
         # Remove existing Authentication-Results headers for our authserv_id
-        for i, val in enumerate(self.arheaders, 1):
-            # FIXME: don't delete A-R headers from trusted MTAs
-            try:
-                ar = (authres.AuthenticationResultsHeader
-                      .parse_value(FWS.sub('', val)))
-                if ar.authserv_id == self.AuthservID:
-                    self.chgheader('authentication-results', i, '')
-                    if (milterconfig.get('Syslog') and
-                            milterconfig.get('debugLevel') >= 1):
-                        syslog.syslog('REMOVE: {0}'.format(val))
-            except:
-                # Don't error out on unparseable AR header fiels
-                pass
+
+        # added by saku and indented
+        if not self.internal_connection:
+            for i, val in enumerate(self.arheaders, 1):
+                # FIXME: don't delete A-R headers from trusted MTAs
+                try:
+                    ar = (authres.AuthenticationResultsHeader
+                          .parse_value(FWS.sub('', val)))
+                    if ar.authserv_id == self.AuthservID:
+                        self.chgheader('authentication-results', i, '')
+                        if (milterconfig.get('Syslog') and milterconfig.get('debugLevel') >= 1):
+                            syslog.syslog('REMOVE: {0}'.format(val))
+                except:
+                    # Don't error out on unparseable AR header fiels
+                    pass
+        # ----------
+
         # Check or sign DKIM
         self.fp.seek(0)
         if milterconfig.get('Domain'):
@@ -198,15 +206,18 @@ class dkimMilter(Milter.Base):
                 and not self.external_connection):
             txt = self.fp.read()
             self.sign_dkim(txt)
-        if not self.internal_connection:
-            self.check_spf()
         if ((self.has_dkim) and (not self.internal_connection) and
             (milterconfig.get('Mode') == 'v' or
              milterconfig.get('Mode') == 'sv')):
             txt = self.fp.read()
             self.check_dkim(txt)
+
+        # added by saku
         if not self.internal_connection:
+            self.check_spf()
             self.check_dmarc()
+        # ----------
+
         if self.arresults:
             h = authres.AuthenticationResultsHeader(authserv_id=
                                                     self.AuthservID,
@@ -277,6 +288,9 @@ class dkimMilter(Milter.Base):
             d = dkim.DKIM(txt)
             try:
                 res = d.verify(idx=y)
+                # added by saku
+                self.dkimdomain = d.domain
+                # ----------
                 if res:
                     if d.signature_fields.get(b'a') == 'ed25519-sha256':
                         self.dkim_comment = ('Good {0} signature'
@@ -357,7 +371,7 @@ class dkimMilter(Milter.Base):
         if self.fdomain:
             if self.spfresult == "pass" or self.dkimresult == "pass":
                 dmarcdom = dmarc.domain(self.fdomain, publicSuffixList)
-                self.dmarcresult = dmarcdom.authenticate(self.mailfromdom, self.header_d)
+                self.dmarcresult = dmarcdom.authenticate(self.mailfromdom, self.dkimdomain)
             else:
                 self.dmarcresult = 'none'
             self.arresults.append(
