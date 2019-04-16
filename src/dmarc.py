@@ -54,21 +54,31 @@ class PublicSuffixList():
     def get_org_domain(self, domain):
         if self.publicsuffix == None:
             return None
+        if domain == None or domain[0] == '.':
+            return None
+        domain = domain.lower()
         labels= domain.split('.')
         length = len(labels)
+        tld_flag = False
         for index in range(length):
             orgdom = '.'.join(labels[index:])
             if orgdom in self.exclamationsuffix:
+                tld_flag = True
                 break
             if orgdom in self.wildcardsuffix:
+                tld_flag = True
                 index = index - 2
                 break
             if orgdom in self.publicsuffix:
+                tld_flag = True
                 index = index - 1
                 break
-        if index > 0:
+        if tld_flag == False and length > 1:   # Unlisted TLD
+            return '.'.join(labels[-2:])
+        elif tld_flag == True and index >= 0:
             return '.'.join(labels[index:])
-        return None
+        else:
+            return None
         
 
 # ---------------------------- #

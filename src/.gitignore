@@ -1,0 +1,3 @@
+*.pyc
+public_suffix_list.dat
+__pycache__/
