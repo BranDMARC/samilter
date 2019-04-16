@@ -1,11 +1,14 @@
 # samilter
 Sender Authentication Milter which includes SPF, DKIM and DMARC based on dkimpy-milter.
 This package requires thease packages.
+But some packages will installed with others.
 - dkimpy-milter
 - pymilter
 - pyspf
 - pydns
 - sendmail-milter (pymilter is wrapper of sendmail-milter library)
+- sendmail-devel
+- ipaddr-py-master.zip
 
 ## configuration
 - main config file (/usr/local/etc/senderauth-milter.conf)
