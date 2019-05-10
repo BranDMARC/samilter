@@ -1,7 +1,7 @@
 # coding: utf-8
 import sys
 import os
-import dmarc
+from . import dmarc
 
 # https://raw.githubusercontent.com/publicsuffix/list/master/tests/test_psl.txt
 #

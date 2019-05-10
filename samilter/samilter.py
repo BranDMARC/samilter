@@ -27,12 +27,12 @@ import syslog
 import Milter
 import dkim
 import spf
-import dmarc
+from . import dmarc
 import authres
 import authres.dmarc
 import os
 import tempfile
-import StringIO
+import io
 import re
 from Milter.utils import parse_addr, parseaddr
 import dkimpy_milter.config as config
@@ -125,7 +125,7 @@ class dkimMilter(Milter.Base):
     def envfrom(self, f, *str):
         if milterconfig.get('Syslog') and milterconfig.get('debugLevel') >= 2:
             syslog.syslog("mail from: {0} {1}".format(f, str))
-        self.fp = StringIO.StringIO()
+        self.fp = io.BytesIO()
         self.mailfrom = f
         t = parse_addr(f)
         if len(t) == 2:
@@ -158,13 +158,13 @@ class dkimMilter(Milter.Base):
         elif lname == 'authentication-results':
             self.arheaders.append(val)
         if self.fp:
-            self.fp.write("%s: %s\n" % (name, val))
+            self.fp.write(b"%s: %s\n" % (name.encode("utf-8"), val.encode("utf-8")))
         return Milter.CONTINUE
 
     @Milter.noreply
     def eoh(self):
         if self.fp:
-            self.fp.write("\n")   # terminate headers
+            self.fp.write(b"\n")   # terminate headers
         self.bodysize = 0
         return Milter.CONTINUE
 
@@ -191,7 +191,7 @@ class dkimMilter(Milter.Base):
                         self.chgheader('authentication-results', i, '')
                         if (milterconfig.get('Syslog') and milterconfig.get('debugLevel') >= 1):
                             syslog.syslog('REMOVE: {0}'.format(val))
-                except:
+                except Exception:
                     # Don't error out on unparseable AR header fiels
                     pass
         # ----------
@@ -222,7 +222,8 @@ class dkimMilter(Milter.Base):
             h = authres.AuthenticationResultsHeader(authserv_id=
                                                     self.AuthservID,
                                                     results=self.arresults)
-            h = fold(str(h))
+            # h = fold(str(h))
+            h = fold(str(h).encode("utf-8"))
             if (milterconfig.get('Syslog') and
                     milterconfig.get('debugLevel') >= 2):
                 syslog.syslog(str(h))
