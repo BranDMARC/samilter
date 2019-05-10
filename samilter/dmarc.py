@@ -41,7 +41,7 @@ class PublicSuffixList():
             else:
                 # check internationalization domain (UTF-8)
                 if not all([ord(c)>=ord('-') and ord(c)<=ord('z')  for c in line]):
-                    domsuffix = unicode(line, 'utf-8').encode('idna')
+                    domsuffix = str(line, 'utf-8').encode('idna')
                 else:
                     domsuffix = line
                 self.store_item(domsuffix, self.publicsuffix)
@@ -79,7 +79,7 @@ class PublicSuffixList():
             return '.'.join(labels[index:])
         else:
             return None
-        
+
 
 # ---------------------------- #
 # --- DMARC authentication --- #
@@ -96,7 +96,7 @@ class domain():
         self.publicsuffix = pbl
         self.headerdomain = dname
         self.orgdomain = pbl.get_org_domain(self.headerdomain)
-        
+
     def lookup_dns(self, domain):
         if not self.discoverNS:
             DNS.DiscoverNameServers()
@@ -110,17 +110,17 @@ class domain():
                     req = DNS.DnsRequest(name, qtype='TXT', protocol='tcp', timeout=self.dnstimeout)
                     res = req.req()
                 except DNS.DNSError as x:
-                    print 'DNS: TCP fallback error:', str(x)
+                    print('DNS: TCP fallback error:', str(x))
                 if res.header['rcode'] != 0 and res.header['rcode'] != 3:
-                    print 'DNS Error:', res.header['status'], ' RCODE ({})'.format(res.header['rcode'])
+                    print('DNS Error:', res.header['status'], ' RCODE ({})'.format(res.header['rcode']))
             return [((a['name'], a['typename']), a['data'])
                     for a in res.answers] \
                         + [((a['name'], a['typename']), a['data'])
                            for a in res.additional]
         except AttributeError as x:
-            print 'DNS attribute:' + str(x)
+            print('DNS attribute:' + str(x))
         except IOError as x:
-            print 'DNS IOE:' + str(x)
+            print('DNS IOE:' + str(x))
         except DNS.DNSError as x:
             'DNS ' + str(x)
 
